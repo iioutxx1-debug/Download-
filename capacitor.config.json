@@ -1,0 +1,7 @@
+{
+  "appId": "app.safaa.downloader",
+  "appName": "صفاء",
+  "webDir": "www",
+  "backgroundColor": "#14111f",
+  "android": { "allowMixedContent": false }
+}
