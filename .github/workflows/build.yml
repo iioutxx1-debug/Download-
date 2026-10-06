@@ -17,6 +17,16 @@ jobs:
           java-version: 17
       - run: npm install
       - run: npx cap add android
+      - name: Add native downloader
+        run: |
+          D=android/app/src/main/java/app/safaa/downloader
+          mkdir -p $D
+          cp YtPlugin.java MainActivity.java $D/
+          sed -i 's/minSdkVersion = .*/minSdkVersion = 24/' android/variables.gradle
+          sed -i '0,/^dependencies {/s//dependencies {\n    implementation "io.github.junkfood02.youtubedl-android:library:0.17.4"\n    implementation "io.github.junkfood02.youtubedl-android:ffmpeg:0.17.4"/' android/app/build.gradle
+          sed -i '0,/^android {/s//android {\n    packaging { jniLibs { useLegacyPackaging = true } }/' android/app/build.gradle
+          sed -i '0,/defaultConfig {/s//defaultConfig {\n        ndk { abiFilters "arm64-v8a" }/' android/app/build.gradle
+          grep -n "youtubedl\|useLegacy\|abiFilters" android/app/build.gradle
       - run: npx cap sync android
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
