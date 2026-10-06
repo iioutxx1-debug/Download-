@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: sed -i 's/صفاء/ali khalid/g' index.html
       - run: mkdir -p www && cp -n index.html www/ || true
       - uses: actions/setup-node@v4
         with:
