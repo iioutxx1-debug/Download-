@@ -68,6 +68,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 <div class="bar"><input id="url" placeholder="https://" aria-label="رابط المقطع"><button class="go" id="an">حلّل الرابط</button></div>
 <p class="sites">يعمل مع آلاف المواقع، بصيغ MP4 وWEBM وMP3 وM4A وFLAC.</p>
 
+<p class="st" id="err" style="margin:10px 6px 0;color:var(--gold)"></p>
 <section class="cmp">
 <h2>الفرق بين الأصل والمحسّن</h2>
 <p>حرّك الفاصل لمقارنة 144p بالنسخة المحسّنة 1080p.</p>
@@ -75,14 +76,14 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </section>
 
 <section class="res" id="res">
-<div class="media"><div class="th"></div><div><h2>مقطع تجريبي</h2><small>4:32 · أعلى جودة متاحة في المصدر: 480p</small></div></div>
+<div class="media"><div class="th" id="th"></div><div><h2 id="mt"></h2><small id="ms"></small></div></div>
 <div class="seg"><button id="tv" aria-pressed="true">فيديو</button><button id="ta" aria-pressed="false">صوت</button></div>
 <div class="grid" id="grid"></div>
 <div class="fmt" id="fmt"></div>
 <div class="dock"><p id="sum"></p><button class="go" id="start">ابدأ التحميل</button></div>
 <div class="prog" id="prog"><i></i></div><div class="st" id="st" aria-live="polite"></div>
 </section>
-<p class="note">هذه واجهة تجريبية: الأرقام والتحليل وهمية، ولم تُربط بعد بسيرفر yt-dlp وFFmpeg.</p>
+<p class="note">عنوان السيرفر<br><input id="api" placeholder="http://localhost:8000" style="width:100%;direction:ltr;margin-top:6px;background:var(--s1);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:10px;font:inherit"></p>
 </main>
 <script>
 const $=id=>document.getElementById(id);
@@ -94,17 +95,29 @@ c.strokeStyle='rgba(255,243,208,.7)';c.lineWidth=Math.max(h/360,.15);for(let i=0
 draw($('hi').getContext('2d'),1280,720);draw($('lo').getContext('2d'),64,36);
 $('rg').oninput=e=>$('stage').style.setProperty('--p',e.target.value+'%');
 const V=[144,240,360,480,720,1080,1440,2160],A=[['MP3','128 kbps'],['MP3','320 kbps'],['M4A','256 kbps'],['FLAC','بلا فقدان'],['OPUS','160 kbps']];
-let mode='v',sel=null,fm='MP4';
+let mode='v',sel=null,fm='MP4',maxH=480,curUrl='';
 function render(){const g=$('grid');g.innerHTML='';
-if(mode=='v'){V.forEach(r=>{const ai=r>480,b=document.createElement('button');b.className='q'+(ai?' ai':'');b.setAttribute('aria-pressed',sel==r);b.innerHTML='<b>'+(r==2160?'4K':r+'p')+'</b><span>'+(ai?'ترقية بالذكاء الاصطناعي':'أصلية')+'</span>';b.onclick=()=>{sel=r;render()};g.appendChild(b)});
+if(mode=='v'){V.forEach(r=>{const ai=r>maxH,b=document.createElement('button');b.className='q'+(ai?' ai':'');b.setAttribute('aria-pressed',sel==r);b.innerHTML='<b>'+(r==2160?'4K':r+'p')+'</b><span>'+(ai?'ترقية بالذكاء الاصطناعي':'أصلية')+'</span>';b.onclick=()=>{sel=r;render()};g.appendChild(b)});
 $('fmt').innerHTML='الصيغة: ';['MP4','WEBM','MKV'].forEach(f=>{const b=document.createElement('button');b.textContent=f;b.setAttribute('aria-pressed',fm==f);b.onclick=()=>{fm=f;render()};$('fmt').appendChild(b)})}
 else{A.forEach((a,i)=>{const b=document.createElement('button');b.className='q';b.setAttribute('aria-pressed',sel==i);b.innerHTML='<b>'+a[0]+'</b><span>'+a[1]+'</span>';b.onclick=()=>{sel=i;render()};g.appendChild(b)});$('fmt').innerHTML=''}
-let s='اختر جودة للمتابعة';if(sel!==null){if(mode=='v'){const ai=sel>480;s='<b dir="ltr">'+(sel==2160?'4K':sel+'p')+' · '+fm+'</b>'+(ai?'<small>سيُحسَّن بالذكاء الاصطناعي، والوقت التقديري '+Math.ceil(sel/240)+' دقائق</small>':'<small>تحميل مباشر بدون معالجة</small>')}else s='<b dir="ltr">'+A[sel][0]+' · '+A[sel][1]+'</b><small>استخراج الصوت فقط</small>'}
+let s='اختر جودة للمتابعة';if(sel!==null){if(mode=='v'){const ai=sel>maxH;s='<b dir="ltr">'+(sel==2160?'4K':sel+'p')+' · '+fm+'</b>'+(ai?'<small>أعلى جودة في المصدر '+(maxH||'؟')+'p وسيُحمَّل بها. التحسين بالذكاء الاصطناعي قريباً</small>':'<small>تحميل مباشر بدون معالجة</small>')}else s='<b dir="ltr">'+A[sel][0]+' · '+A[sel][1]+'</b><small>استخراج الصوت فقط</small>'}
 $('sum').innerHTML=s;$('start').disabled=sel===null;$('start').style.opacity=sel===null?.5:1}
 function tab(m){mode=m;sel=null;$('tv').setAttribute('aria-pressed',m=='v');$('ta').setAttribute('aria-pressed',m=='a');render()}
 $('tv').onclick=()=>tab('v');$('ta').onclick=()=>tab('a');
-$('an').onclick=()=>{if(!$('url').value.trim()){$('url').focus();return}$('an').textContent='جارٍ التحليل…';setTimeout(()=>{$('an').textContent='حلّل الرابط';$('res').classList.add('on');tab('v');$('res').scrollIntoView({behavior:'smooth'})},900)};
-$('start').onclick=()=>{if(sel===null)return;const p=$('prog');p.style.display='block';const bar=p.firstChild,ai=mode=='v'&&sel>480,steps=ai?['جارٍ التحميل','تحسين الإطارات بالذكاء الاصطناعي','تجهيز الملف']:['جارٍ التحميل','تجهيز الملف'];let i=0;bar.style.width='0';(function n(){if(i>=steps.length){$('st').textContent='اكتمل. الملف جاهز للحفظ.';bar.style.width='100%';return}$('st').textContent=steps[i]+'…';bar.style.width=((i+1)/steps.length*90)+'%';i++;setTimeout(n,1200)})()};
+let API='http://localhost:8000';try{API=localStorage.getItem('api')||API}catch(e){}
+$('api').value=API;
+$('api').onchange=()=>{API=$('api').value.trim().replace(/\/$/,'');try{localStorage.setItem('api',API)}catch(e){}};
+async function call(p,body){const Yt=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Yt;
+if(Yt){try{if(p=='/api/info')return await Yt.info(body);if(p=='/api/start')return await Yt.start(body);if(p.startsWith('/api/status/'))return await Yt.status({id:p.split('/').pop()})}catch(e){throw new Error(e.message||'خطأ')}}
+if(!API)throw new Error('اكتب عنوان السيرفر في أسفل الصفحة');let r;try{r=await fetch(API+p,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:undefined)}catch(e){throw new Error('تعذر الاتصال بالسيرفر')}const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||'خطأ في السيرفر');return j}
+const fmtT=t=>t?Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'):'';
+$('an').onclick=async()=>{const u=$('url').value.trim();if(!u){$('url').focus();return}$('err').textContent='';$('an').textContent='جارٍ التحليل…';
+try{const d=await call('/api/info',{url:u});curUrl=u;maxH=d.heights.length?Math.max(...d.heights):0;$('mt').textContent=d.title||'مقطع';$('ms').textContent=[d.site,fmtT(d.duration),'أعلى جودة في المصدر: '+(maxH?maxH+'p':'غير متوفرة')].filter(Boolean).join(' · ');
+if(d.thumbnail){$('th').style.backgroundImage='url("'+d.thumbnail+'")';$('th').style.backgroundSize='cover'}
+$('res').classList.add('on');tab('v');$('res').scrollIntoView({behavior:'smooth'})}catch(e){$('err').textContent=e.message}$('an').textContent='حلّل الرابط'};
+$('start').onclick=async()=>{if(sel===null)return;const p=$('prog'),bar=p.firstChild;p.style.display='block';bar.style.width='3%';$('st').textContent='جارٍ البدء…';
+const b=mode=='v'?{url:curUrl,kind:'video',height:Math.min(sel,maxH||sel),fmt:fm.toLowerCase()}:{url:curUrl,kind:'audio',fmt:A[sel][0].toLowerCase(),abr:parseInt(A[sel][1])||192};
+try{const {id}=await call('/api/start',b);for(;;){await new Promise(r=>setTimeout(r,1200));const s=await call('/api/status/'+id);bar.style.width=Math.max(3,s.p)+'%';if(s.s=='error')throw new Error(s.err||'فشل التحميل');if(s.s=='done'){bar.style.width='100%';if(s.saved){$('st').textContent='تم الحفظ في التنزيلات ‹ Safaa: '+s.saved}else{$('st').textContent='اكتمل. يبدأ حفظ الملف…';location.href=API+'/api/file/'+id}return}$('st').textContent=s.s=='saving'?'جارٍ الحفظ…':'جارٍ التحميل… قد يستغرق دقائق'}}catch(e){$('st').textContent=e.message}};
 render();
 </script>
 </body>
