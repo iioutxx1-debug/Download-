@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>صفاء — حمّل بأعلى جودة</title>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#14111f;--s1:#1d1830;--s2:#272041;--line:#3a3158;--tx:#f3eee4;--mut:#a59fba;--gold:#e8d3a2;--gold2:#c9a45c;--on:#2a2008;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f1e7;--s1:#fffaf0;--s2:#efe6d3;--line:#d8ccb0;--tx:#241d33;--mut:#6d6580;--gold:#7a5718;--gold2:#a77c2c;--on:#fff8e6}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Readex Pro',system-ui,'Segoe UI',Tahoma,sans-serif;line-height:1.7;background-image:radial-gradient(60% 40% at 80% 0,color-mix(in srgb,var(--gold) 14%,transparent),transparent)}
+main{max-width:920px;margin:0 auto;padding:28px 20px 90px}
+.brand{font-weight:700;font-size:1.25rem;color:var(--gold);letter-spacing:.02em}
+h1{font-size:clamp(2.1rem,7vw,3.6rem);line-height:1.2;font-weight:700;margin:40px 0 14px;max-width:14em}
+.lead{color:var(--mut);font-weight:300;font-size:1.05rem;max-width:34em;margin:0 0 28px}
+.bar{display:flex;gap:8px;background:var(--s1);border:1px solid var(--line);border-radius:999px;padding:7px}
+.bar input{flex:1;min-width:0;background:none;border:0;color:var(--tx);font:inherit;padding:0 16px;direction:ltr;text-align:left;outline:0}
+.bar input::placeholder{color:var(--mut)}
+.bar:focus-within{border-color:var(--gold2)}
+button{font:inherit;cursor:pointer}
+.go{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--on);border:0;border-radius:999px;padding:12px 26px;font-weight:600}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.sites{color:var(--mut);font-size:.85rem;margin:12px 6px 0}
+.cmp{margin-top:44px}
+.cmp h2,.res h2{font-size:1.15rem;font-weight:600;margin:0 0 4px}
+.cmp p{color:var(--mut);margin:0 0 14px;font-size:.92rem;font-weight:300}
+.stage{position:relative;direction:ltr;aspect-ratio:16/9;border-radius:22px;overflow:hidden;border:1px solid var(--line);--p:50%;box-shadow:0 30px 60px -30px #000a}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#lo{image-rendering:pixelated;clip-path:inset(0 calc(100% - var(--p)) 0 0)}
+.hd{position:absolute;top:0;bottom:0;left:var(--p);width:2px;background:var(--gold);box-shadow:0 0 18px var(--gold)}
+.hd::after{content:"⇄";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:42px;height:42px;border-radius:50%;background:var(--gold);color:var(--on);display:grid;place-items:center;font-size:1.1rem}
+.stage input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:ew-resize;margin:0}
+.tag{position:absolute;bottom:12px;padding:3px 12px;border-radius:999px;background:#0009;color:#fff;font-size:.8rem;direction:ltr}
+.res{margin-top:44px;display:none;background:var(--s1);border:1px solid var(--line);border-radius:26px;padding:22px}
+.res.on{display:block}
+.media{display:flex;gap:14px;align-items:center;margin-bottom:18px}
+.th{width:96px;aspect-ratio:16/9;border-radius:12px;background:linear-gradient(135deg,#2b1f55,#d9778f 60%,#f4c27a)}
+.media small{color:var(--mut)}
+.seg{display:inline-flex;background:var(--s2);border-radius:999px;padding:4px;margin-bottom:16px}
+.seg button{background:none;border:0;color:var(--mut);padding:7px 22px;border-radius:999px}
+.seg button[aria-pressed=true]{background:var(--gold);color:var(--on);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.q{background:var(--s2);border:1px solid var(--line);color:var(--tx);border-radius:16px;padding:12px 14px;text-align:right;display:flex;flex-direction:column;gap:2px}
+.q b{font-size:1.1rem;direction:ltr;text-align:right}
+.q span{font-size:.78rem;color:var(--mut)}
+.q.ai span{color:var(--gold)}
+.q[aria-pressed=true]{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}
+.fmt{margin:16px 0 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--mut);font-size:.9rem}
+.fmt button{background:none;border:1px solid var(--line);color:var(--tx);border-radius:999px;padding:4px 16px}
+.fmt button[aria-pressed=true]{border-color:var(--gold);color:var(--gold)}
+.dock{margin-top:20px;border-top:1px solid var(--line);padding-top:18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.dock p{margin:0;font-size:.92rem}
+.dock p small{display:block;color:var(--mut)}
+.prog{height:6px;background:var(--s2);border-radius:9px;margin-top:14px;overflow:hidden;display:none}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold2),var(--gold));transition:width .3s}
+.st{color:var(--mut);font-size:.85rem;margin-top:8px;min-height:1.5em}
+.note{margin-top:34px;color:var(--mut);font-size:.8rem}
+@media (prefers-reduced-motion:reduce){.prog i{transition:none}}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">صفاء</div>
+<h1>حمّل أي مقطع، وارفع جودته.</h1>
+<p class="lead">الصق رابط الفيديو أو الصوت من أي موقع، واختر الجودة. المقاطع منخفضة الدقة ترتقي إلى 1080p بالذكاء الاصطناعي.</p>
+<div class="bar"><input id="url" placeholder="https://" aria-label="رابط المقطع"><button class="go" id="an">حلّل الرابط</button></div>
+<p class="sites">يعمل مع آلاف المواقع، بصيغ MP4 وWEBM وMP3 وM4A وFLAC.</p>
+
+<section class="cmp">
+<h2>الفرق بين الأصل والمحسّن</h2>
+<p>حرّك الفاصل لمقارنة 144p بالنسخة المحسّنة 1080p.</p>
+<div class="stage" id="stage"><canvas id="hi" width="1280" height="720"></canvas><canvas id="lo" width="64" height="36"></canvas><div class="hd"></div><span class="tag" style="left:12px">144p الأصل</span><span class="tag" style="right:12px">1080p محسّن</span><input type="range" id="rg" min="2" max="98" value="50" aria-label="مقارنة الجودة"></div>
+</section>
+
+<section class="res" id="res">
+<div class="media"><div class="th"></div><div><h2>مقطع تجريبي</h2><small>4:32 · أعلى جودة متاحة في المصدر: 480p</small></div></div>
+<div class="seg"><button id="tv" aria-pressed="true">فيديو</button><button id="ta" aria-pressed="false">صوت</button></div>
+<div class="grid" id="grid"></div>
+<div class="fmt" id="fmt"></div>
+<div class="dock"><p id="sum"></p><button class="go" id="start">ابدأ التحميل</button></div>
+<div class="prog" id="prog"><i></i></div><div class="st" id="st" aria-live="polite"></div>
+</section>
+<p class="note">هذه واجهة تجريبية: الأرقام والتحليل وهمية، ولم تُربط بعد بسيرفر yt-dlp وFFmpeg.</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+function draw(c,w,h){const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#2b1f55');g.addColorStop(.55,'#d9778f');g.addColorStop(1,'#f4c27a');c.fillStyle=g;c.fillRect(0,0,w,h);
+c.fillStyle='#fff3d0';c.beginPath();c.arc(w*.68,h*.5,h*.12,0,7);c.fill();
+['#4a2d63','#33204f','#1d1330'].forEach((f,k)=>{c.fillStyle=f;c.beginPath();c.moveTo(0,h);for(let x=0;x<=w;x+=w/200)c.lineTo(x,h*(.62+.1*k)+Math.sin(x/w*(5+k*3)+k)*h*.07+Math.sin(x/w*60+k)*h*.012);c.lineTo(w,h);c.fill()});
+c.fillStyle='#0d0818';for(let i=0;i<90;i++){const x=i*w/90+w/180,t=h*(.04+.05*((i*7)%5)/4);c.fillRect(x,h-t*2,Math.max(w/900,.3),t*2)}
+c.strokeStyle='rgba(255,243,208,.7)';c.lineWidth=Math.max(h/360,.15);for(let i=0;i<3;i++){c.beginPath();c.moveTo(0,h*(.2+i*.05));c.quadraticCurveTo(w/2,h*(.28+i*.05),w,h*(.2+i*.05));c.stroke()}}
+draw($('hi').getContext('2d'),1280,720);draw($('lo').getContext('2d'),64,36);
+$('rg').oninput=e=>$('stage').style.setProperty('--p',e.target.value+'%');
+const V=[144,240,360,480,720,1080,1440,2160],A=[['MP3','128 kbps'],['MP3','320 kbps'],['M4A','256 kbps'],['FLAC','بلا فقدان'],['OPUS','160 kbps']];
+let mode='v',sel=null,fm='MP4';
+function render(){const g=$('grid');g.innerHTML='';
+if(mode=='v'){V.forEach(r=>{const ai=r>480,b=document.createElement('button');b.className='q'+(ai?' ai':'');b.setAttribute('aria-pressed',sel==r);b.innerHTML='<b>'+(r==2160?'4K':r+'p')+'</b><span>'+(ai?'ترقية بالذكاء الاصطناعي':'أصلية')+'</span>';b.onclick=()=>{sel=r;render()};g.appendChild(b)});
+$('fmt').innerHTML='الصيغة: ';['MP4','WEBM','MKV'].forEach(f=>{const b=document.createElement('button');b.textContent=f;b.setAttribute('aria-pressed',fm==f);b.onclick=()=>{fm=f;render()};$('fmt').appendChild(b)})}
+else{A.forEach((a,i)=>{const b=document.createElement('button');b.className='q';b.setAttribute('aria-pressed',sel==i);b.innerHTML='<b>'+a[0]+'</b><span>'+a[1]+'</span>';b.onclick=()=>{sel=i;render()};g.appendChild(b)});$('fmt').innerHTML=''}
+let s='اختر جودة للمتابعة';if(sel!==null){if(mode=='v'){const ai=sel>480;s='<b dir="ltr">'+(sel==2160?'4K':sel+'p')+' · '+fm+'</b>'+(ai?'<small>سيُحسَّن بالذكاء الاصطناعي، والوقت التقديري '+Math.ceil(sel/240)+' دقائق</small>':'<small>تحميل مباشر بدون معالجة</small>')}else s='<b dir="ltr">'+A[sel][0]+' · '+A[sel][1]+'</b><small>استخراج الصوت فقط</small>'}
+$('sum').innerHTML=s;$('start').disabled=sel===null;$('start').style.opacity=sel===null?.5:1}
+function tab(m){mode=m;sel=null;$('tv').setAttribute('aria-pressed',m=='v');$('ta').setAttribute('aria-pressed',m=='a');render()}
+$('tv').onclick=()=>tab('v');$('ta').onclick=()=>tab('a');
+$('an').onclick=()=>{if(!$('url').value.trim()){$('url').focus();return}$('an').textContent='جارٍ التحليل…';setTimeout(()=>{$('an').textContent='حلّل الرابط';$('res').classList.add('on');tab('v');$('res').scrollIntoView({behavior:'smooth'})},900)};
+$('start').onclick=()=>{if(sel===null)return;const p=$('prog');p.style.display='block';const bar=p.firstChild,ai=mode=='v'&&sel>480,steps=ai?['جارٍ التحميل','تحسين الإطارات بالذكاء الاصطناعي','تجهيز الملف']:['جارٍ التحميل','تجهيز الملف'];let i=0;bar.style.width='0';(function n(){if(i>=steps.length){$('st').textContent='اكتمل. الملف جاهز للحفظ.';bar.style.width='100%';return}$('st').textContent=steps[i]+'…';bar.style.width=((i+1)/steps.length*90)+'%';i++;setTimeout(n,1200)})()};
+render();
+</script>
+</body>
+</html>
