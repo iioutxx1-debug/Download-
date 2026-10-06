@@ -39,7 +39,31 @@ public class YtPlugin extends Plugin {
         android.content.Context c = getContext().getApplicationContext();
         YoutubeDL.getInstance().init(c);
         FFmpeg.getInstance().init(c);
+        tryUpdate(c);
         ready = true;
+    }
+
+    private void tryUpdate(android.content.Context c) {
+        try {
+            YoutubeDL y = YoutubeDL.getInstance();
+            for (java.lang.reflect.Method m : y.getClass().getMethods()) {
+                if (!m.getName().equals("updateYoutubeDL")) continue;
+                Class<?>[] pt = m.getParameterTypes();
+                if (pt.length != 2) continue;
+                Object ch = null;
+                if (pt[1].isEnum()) {
+                    for (Object e : pt[1].getEnumConstants()) if (e.toString().equals("STABLE")) ch = e;
+                } else {
+                    for (java.lang.reflect.Field f : pt[1].getFields()) {
+                        if (f.getName().equals("_STABLE") || f.getName().equals("STABLE")) ch = f.get(null);
+                    }
+                }
+                if (ch != null) m.invoke(y, c, ch);
+                break;
+            }
+        } catch (Throwable t) {
+            // التحديث اختياري، نكمل بدونه
+        }
     }
 
     @PluginMethod
