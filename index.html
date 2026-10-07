@@ -9,6 +9,14 @@
 :root{--bg:#14111f;--s1:#1d1830;--s2:#272041;--line:#3a3158;--tx:#f3eee4;--mut:#a59fba;--gold:#e8d3a2;--gold2:#c9a45c;--on:#2a2008;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f1e7;--s1:#fffaf0;--s2:#efe6d3;--line:#d8ccb0;--tx:#241d33;--mut:#6d6580;--gold:#7a5718;--gold2:#a77c2c;--on:#fff8e6}}
 *{box-sizing:border-box}
+:root[data-theme="light"]{--bg:#f6f1e7;--s1:#fffaf0;--s2:#efe6d3;--line:#d8ccb0;--tx:#241d33;--mut:#6d6580;--gold:#7a5718;--gold2:#a77c2c;--on:#fff8e6}
+.top{display:flex;justify-content:space-between;align-items:center}
+.gear{background:var(--s1);border:1px solid var(--line);color:var(--gold);border-radius:50%;width:42px;height:42px;font-size:1.2rem}
+.sheet{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:20px;z-index:9}.sheet[hidden]{display:none}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:22px;padding:20px;width:100%;max-width:460px;max-height:85vh;overflow:auto;position:relative}
+.card h2{margin:0 0 4px}.card h3{color:var(--gold);margin:16px 0 6px;font-size:1rem}.card a{color:var(--gold)}
+.card textarea{width:100%;background:var(--s2);color:var(--tx);border:1px solid var(--line);border-radius:12px;padding:10px;direction:ltr;font:inherit}
+.x{position:absolute;top:12px;left:12px;background:none;border:0;color:var(--mut);font-size:1.2rem}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font-family:'Readex Pro',system-ui,'Segoe UI',Tahoma,sans-serif;line-height:1.7;background-image:radial-gradient(60% 40% at 80% 0,color-mix(in srgb,var(--gold) 14%,transparent),transparent)}
 main{max-width:920px;margin:0 auto;padding:28px 20px 90px}
@@ -62,7 +70,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </head>
 <body>
 <main>
-<div class="brand">صفاء</div>
+<div class="top"><div class="brand">صفاء</div><button class="gear" onclick="$('sh').hidden=false" aria-label="الإعدادات">⚙</button></div>
 <h1>حمّل أي مقطع، وارفع جودته.</h1>
 <p class="lead">الصق رابط الفيديو أو الصوت من أي موقع، واختر الجودة. المقاطع منخفضة الدقة ترتقي إلى 1080p بالذكاء الاصطناعي.</p>
 <div class="bar"><input id="url" placeholder="https://" aria-label="رابط المقطع"><button class="go" id="an">حلّل الرابط</button></div>
@@ -85,6 +93,13 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 </section>
 <p class="note">عنوان السيرفر<br><input id="api" placeholder="http://localhost:8000" style="width:100%;direction:ltr;margin-top:6px;background:var(--s1);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:10px;font:inherit"></p>
 </main>
+<div class="sheet" id="sh" hidden><div class="card"><button class="x" onclick="$('sh').hidden=true">✕</button>
+<h2>الإعدادات</h2>
+<h3>لمحة</h3><p>المطور: علي خالد<br><a href="tel:07875258038">07875258038</a><br><a href="https://instagram.com/sucn_i">instagram: sucn_i</a></p>
+<h3>المظهر</h3><div class="fmt"><button onclick="th('auto')">تلقائي</button><button onclick="th('light')">نهاري</button><button onclick="th('dark')">ليلي</button></div>
+<h3>الإصلاح</h3><textarea id="fxt" rows="5" placeholder="الصق كود الإصلاح هنا"></textarea>
+<div class="fmt"><button onclick="applyFx()">تطبيق</button><button onclick="clrFx()">مسح</button><button onclick="copyRep()">نسخ تقرير المشكلة</button></div><p id="fxm" class="st"></p>
+</div></div>
 <script>
 const $=id=>document.getElementById(id);
 function draw(c,w,h){const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#2b1f55');g.addColorStop(.55,'#d9778f');g.addColorStop(1,'#f4c27a');c.fillStyle=g;c.fillRect(0,0,w,h);
@@ -97,10 +112,10 @@ $('rg').oninput=e=>$('stage').style.setProperty('--p',e.target.value+'%');
 const V=[144,240,360,480,720,1080,1440,2160],A=[['MP3','128 kbps'],['MP3','320 kbps'],['M4A','256 kbps'],['FLAC','بلا فقدان'],['OPUS','160 kbps']];
 let mode='v',sel=null,fm='MP4',maxH=480,curUrl='';
 function render(){const g=$('grid');g.innerHTML='';
-if(mode=='v'){V.forEach(r=>{const ai=r>maxH,b=document.createElement('button');b.className='q'+(ai?' ai':'');b.setAttribute('aria-pressed',sel==r);b.innerHTML='<b>'+(r==2160?'4K':r+'p')+'</b><span>'+(ai?'ترقية بالذكاء الاصطناعي':'أصلية')+'</span>';b.onclick=()=>{sel=r;render()};g.appendChild(b)});
+if(mode=='v'){V.forEach(r=>{const ai=r>maxH,b=document.createElement('button');b.className='q'+(ai?' ai':'');b.setAttribute('aria-pressed',sel==r);b.innerHTML='<b>'+(r==2160?'4K':r+'p')+'</b><span>'+(ai?'تكبير وتحسين':'أصلية')+'</span>';b.onclick=()=>{sel=r;render()};g.appendChild(b)});
 $('fmt').innerHTML='الصيغة: ';['MP4','WEBM','MKV'].forEach(f=>{const b=document.createElement('button');b.textContent=f;b.setAttribute('aria-pressed',fm==f);b.onclick=()=>{fm=f;render()};$('fmt').appendChild(b)})}
 else{A.forEach((a,i)=>{const b=document.createElement('button');b.className='q';b.setAttribute('aria-pressed',sel==i);b.innerHTML='<b>'+a[0]+'</b><span>'+a[1]+'</span>';b.onclick=()=>{sel=i;render()};g.appendChild(b)});$('fmt').innerHTML=''}
-let s='اختر جودة للمتابعة';if(sel!==null){if(mode=='v'){const ai=sel>maxH;s='<b dir="ltr">'+(sel==2160?'4K':sel+'p')+' · '+fm+'</b>'+(ai?'<small>أعلى جودة في المصدر '+(maxH||'؟')+'p وسيُحمَّل بها. التحسين بالذكاء الاصطناعي قريباً</small>':'<small>تحميل مباشر بدون معالجة</small>')}else s='<b dir="ltr">'+A[sel][0]+' · '+A[sel][1]+'</b><small>استخراج الصوت فقط</small>'}
+let s='اختر جودة للمتابعة';if(sel!==null){if(mode=='v'){const ai=sel>maxH;s='<b dir="ltr">'+(sel==2160?'4K':sel+'p')+' · '+fm+'</b>'+(ai?'<small>تكبير من '+maxH+'p إلى '+Math.min(sel,1080)+'p بفلتر تحسين (ليس ذكاء اصطناعياً حقيقياً)</small>':'<small>تحميل مباشر بدون معالجة</small>')}else s='<b dir="ltr">'+A[sel][0]+' · '+A[sel][1]+'</b><small>استخراج الصوت فقط</small>'}
 $('sum').innerHTML=s;$('start').disabled=sel===null;$('start').style.opacity=sel===null?.5:1}
 function tab(m){mode=m;sel=null;$('tv').setAttribute('aria-pressed',m=='v');$('ta').setAttribute('aria-pressed',m=='a');render()}
 $('tv').onclick=()=>tab('v');$('ta').onclick=()=>tab('a');
@@ -112,12 +127,20 @@ if(Yt){try{if(p=='/api/info')return await Yt.info(body);if(p=='/api/start')retur
 if(!API)throw new Error('اكتب عنوان السيرفر في أسفل الصفحة');let r;try{r=await fetch(API+p,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}:undefined)}catch(e){throw new Error('تعذر الاتصال بالسيرفر')}const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.detail||'خطأ في السيرفر');return j}
 const fmtT=t=>t?Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0'):'';
 $('an').onclick=async()=>{const u=$('url').value.trim();if(!u){$('url').focus();return}$('err').textContent='';$('an').textContent='جارٍ التحليل…';
-try{const d=await call('/api/info',{url:u});curUrl=u;maxH=d.heights.length?Math.max(...d.heights):0;$('mt').textContent=d.title||'مقطع';$('ms').textContent=[d.site,fmtT(d.duration),'أعلى جودة في المصدر: '+(maxH?maxH+'p':'غير متوفرة')].filter(Boolean).join(' · ');
+try{const d=await call('/api/info',Object.assign({url:u},fx(u)));curUrl=u;maxH=d.heights.length?Math.max(...d.heights):0;$('mt').textContent=d.title||'مقطع';$('ms').textContent=[d.site,fmtT(d.duration),'أعلى جودة في المصدر: '+(maxH?maxH+'p':'غير متوفرة')].filter(Boolean).join(' · ');
 if(d.thumbnail){$('th').style.backgroundImage='url("'+d.thumbnail+'")';$('th').style.backgroundSize='cover'}
-$('res').classList.add('on');tab('v');$('res').scrollIntoView({behavior:'smooth'})}catch(e){$('err').textContent=e.message}$('an').textContent='حلّل الرابط'};
+$('res').classList.add('on');tab('v');$('res').scrollIntoView({behavior:'smooth'})}catch(e){$('err').textContent=e.message;rep(u,e.message)}$('an').textContent='حلّل الرابط'};
 $('start').onclick=async()=>{if(sel===null)return;const p=$('prog'),bar=p.firstChild;p.style.display='block';bar.style.width='3%';$('st').textContent='جارٍ البدء…';
 const b=mode=='v'?{url:curUrl,kind:'video',height:Math.min(sel,maxH||sel),fmt:fm.toLowerCase()}:{url:curUrl,kind:'audio',fmt:A[sel][0].toLowerCase(),abr:parseInt(A[sel][1])||192};
-try{const {id}=await call('/api/start',b);for(;;){await new Promise(r=>setTimeout(r,1200));const s=await call('/api/status/'+id);bar.style.width=Math.max(3,s.p)+'%';if(s.s=='error')throw new Error(s.err||'فشل التحميل');if(s.s=='done'){bar.style.width='100%';if(s.saved){$('st').textContent='تم الحفظ في التنزيلات ‹ Safaa: '+s.saved}else{$('st').textContent='اكتمل. يبدأ حفظ الملف…';location.href=API+'/api/file/'+id}return}$('st').textContent=s.s=='saving'?'جارٍ الحفظ…':'جارٍ التحميل… قد يستغرق دقائق'}}catch(e){$('st').textContent=e.message}};
+try{const {id}=await call('/api/start',Object.assign(b,fx(curUrl),{up:(mode=='v'&&maxH&&sel>maxH)?Math.min(sel,1080):0}));for(;;){await new Promise(r=>setTimeout(r,1200));const s=await call('/api/status/'+id);bar.style.width=Math.max(3,s.p)+'%';if(s.s=='error')throw new Error(s.err||'فشل التحميل');if(s.s=='done'){bar.style.width='100%';if(s.saved){$('st').textContent='تم الحفظ في التنزيلات ‹ Safaa: '+s.saved+(s.note?' ('+s.note+')':'')}else{$('st').textContent='اكتمل. يبدأ حفظ الملف…';location.href=API+'/api/file/'+id}return}$('st').textContent=s.s=='saving'?'جارٍ الحفظ…':'جارٍ التحميل… قد يستغرق دقائق'}}catch(e){$('st').textContent=e.message;rep(curUrl,e.message)}};
+let FX={rules:[]};try{FX=JSON.parse(localStorage.getItem('fx'))||FX}catch(e){}
+const fx=u=>{const o={opts:[],cookies:''};for(const r of FX.rules||[])if(u.includes(r.match)){o.opts=o.opts.concat(r.opts||[]);if(r.cookies)o.cookies=r.cookies}return o};
+const rep=(u,m)=>{try{localStorage.setItem('rep',JSON.stringify({url:u,err:m,t:new Date().toISOString(),fx:FX}))}catch(e){}};
+const th=m=>{if(m=='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',m);try{localStorage.setItem('th',m)}catch(e){}};
+try{th(localStorage.getItem('th')||'auto')}catch(e){}
+function applyFx(){try{const j=JSON.parse($('fxt').value);if(!Array.isArray(j.rules))throw 0;FX=j;localStorage.setItem('fx',JSON.stringify(j));$('fxm').textContent='تم تطبيق الإصلاح ('+j.rules.length+' قاعدة)'}catch(e){$('fxm').textContent='الكود غير صالح، انسخه كاملاً كما أرسلته لك'}}
+function clrFx(){FX={rules:[]};try{localStorage.removeItem('fx')}catch(e){}$('fxt').value='';$('fxm').textContent='تم مسح الإصلاحات'}
+function copyRep(){const t=localStorage.getItem('rep')||'لا يوجد خطأ مسجل';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>$('fxm').textContent='تم النسخ، أرسله لي').catch(()=>{$('fxt').value=t;$('fxm').textContent='انسخ النص من الخانة أعلاه'})}
 render();
 </script>
 </body>
