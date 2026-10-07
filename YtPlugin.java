@@ -67,6 +67,19 @@ public class YtPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void openFile(PluginCall call) {
+        try {
+            android.content.Intent i = new android.content.Intent(android.content.Intent.ACTION_VIEW);
+            i.setDataAndType(Uri.parse(call.getString("uri", "")), call.getString("mime", "*/*"));
+            i.addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION | android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(i);
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("الملف محذوف أو لا يوجد مشغّل مناسب");
+        }
+    }
+
+    @PluginMethod
     public void getShared(PluginCall call) {
         JSObject r = new JSObject();
         r.put("text", MainActivity.pending == null ? "" : MainActivity.pending);
@@ -77,14 +90,24 @@ public class YtPlugin extends Plugin {
     private YoutubeDLRequest mk(String url, JSArray x, String ck, int s) throws Exception {
         YoutubeDLRequest r = new YoutubeDLRequest(url);
         r.addOption("--no-playlist");
-        if (x != null) for (int i = 0; i < x.length(); i++) r.addOption(x.getString(i));
+        boolean hasEA = false;
+        if (x != null) for (int i = 0; i < x.length(); i++) {
+            String t = x.getString(i);
+            if (t.startsWith("--extractor-args")) hasEA = true;
+            if (t.startsWith("--") && !t.contains("=") && i + 1 < x.length() && !x.getString(i + 1).startsWith("-")) {
+                r.addOption(t, x.getString(i + 1));
+                i++;
+            } else {
+                r.addOption(t);
+            }
+        }
         if (ck != null && !ck.isEmpty()) {
             File f = new File(getContext().getCacheDir(), "ck.txt");
             try (java.io.FileWriter w = new java.io.FileWriter(f)) { w.write(ck); }
             r.addOption("--cookies", f.getAbsolutePath());
         }
-        if (s == 1) { r.addOption("--extractor-args"); r.addOption("youtube:player_client=android,ios"); }
-        if (s == 2) { r.addOption("--force-ipv4"); r.addOption("--extractor-args"); r.addOption("youtube:player_client=tv,web_safari"); }
+        if (s == 1 && !hasEA) r.addOption("--extractor-args", "youtube:player_client=android,ios");
+        if (s == 2) { r.addOption("--force-ipv4"); if (!hasEA) r.addOption("--extractor-args", "youtube:player_client=tv,web_safari"); }
         return r;
     }
 
@@ -92,7 +115,7 @@ public class YtPlugin extends Plugin {
     public void info(PluginCall call) {
         String url = call.getString("url");
         if (url == null || url.isEmpty()) { call.reject("لا يوجد رابط"); return; }
-        Exception last = null;
+        Exception last = null, first = null;
         try { init(); } catch (Exception e) { call.reject("تعذر تجهيز المحرك: " + shorten(e)); return; }
         for (int s = 0; s < 3; s++) {
             try {
@@ -128,9 +151,9 @@ public class YtPlugin extends Plugin {
                 res.put("preview", pv);
                 call.resolve(res);
                 return;
-            } catch (Exception e) { last = e; }
+            } catch (Exception e) { last = e; if (first == null) first = e; }
         }
-        call.reject("تعذر تحليل الرابط: " + shorten(last));
+        call.reject("تعذر تحليل الرابط: " + shorten(first));
     }
 
     @PluginMethod
@@ -170,7 +193,7 @@ public class YtPlugin extends Plugin {
             File dir = new File(getContext().getCacheDir(), "dl/" + id);
             dir.mkdirs();
             boolean up = upH > 0 && !"audio".equals(kind);
-            Exception last = null;
+            Exception last = null, first = null;
             for (int s = 0; s < 3; s++) {
                 try {
                     YoutubeDLRequest r = mk(url, x, ck, s);
@@ -192,10 +215,11 @@ public class YtPlugin extends Plugin {
                     break;
                 } catch (Exception e) {
                     last = e;
+                    if (!up && first == null) first = e;
                     if (up) { up = false; st.put("note", "تعذر التكبير فحُمّل بالجودة الأصلية"); s--; }
                 }
             }
-            if (last != null) throw last;
+            if (last != null) throw (first != null ? first : last);
             File best = null;
             File[] fs = dir.listFiles();
             if (fs != null) for (File f : fs) {
@@ -204,7 +228,7 @@ public class YtPlugin extends Plugin {
             }
             if (best == null) throw new Exception("لم يتم إنشاء ملف");
             st.put("s", "saving");
-            st.put("saved", save(best));
+            st.put("saved", save(best, st));
             st.put("p", 100);
             st.put("s", "done");
             notif(id.hashCode(), "اكتمل التحميل", 100, false);
@@ -268,7 +292,7 @@ public class YtPlugin extends Plugin {
         } catch (Exception e) { }
     }
 
-    private String save(File f) throws Exception {
+    private String save(File f, JSObject st) throws Exception {
         if (Build.VERSION.SDK_INT < 29) throw new Exception("يتطلب أندرويد 10 أو أحدث");
         String name = f.getName();
         ContentResolver cr = getContext().getContentResolver();
@@ -283,6 +307,8 @@ public class YtPlugin extends Plugin {
             int n;
             while ((n = in.read(b)) > 0) o.write(b, 0, n);
         }
+        st.put("uri", u.toString());
+        st.put("mime", mime(name));
         f.delete();
         return name;
     }
