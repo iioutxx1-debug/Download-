@@ -149,9 +149,116 @@ const APP={$,call,th,render,tab,fx:()=>FX,state:()=>({mode,sel,maxH,curUrl})};
 function runMods(){let m=[];try{m=JSON.parse(localStorage.getItem('mods'))||[]}catch(e){}
 if(localStorage.getItem('boot')=='1'){localStorage.removeItem('boot');if(m.length){localStorage.removeItem('mods');$('fxm').textContent='تعطل التطبيق بعد آخر إضافة، فحُذفت الإضافات'}return}
 localStorage.setItem('boot','1');
+m=m.filter(c=>!/dlsh|dl2|d=0,t=0|className='qb'/.test(c));try{localStorage.setItem('mods',JSON.stringify(m))}catch(e){}
 for(const c of m){try{new Function('app',c)(APP)}catch(e){$('fxm').textContent='خطأ في إضافة: '+e.message}}
 setTimeout(()=>localStorage.removeItem('boot'),1500)}
 async function pollShare(){const Yt=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Yt;if(!Yt)return;try{const r=await Yt.getShared();const m=(r.text||'').match(/https?:\/\/\S+/);if(m){$('url').value=m[0];$('sh').hidden=true;$('an').click()}}catch(e){}}
+(function(app){
+(function(){
+let d=0,t=0;const o=call;
+call=async function(p,b){
+if(p=='/api/start'){d=0;t=0}
+const r=await o(p,b);
+if(p.startsWith('/api/status/')&&r){t=r.s=='done'?100:Math.min(r.p||0,99);if(r.s=='done')d=100;r.p=d}
+return r};
+setInterval(()=>{if(d<t){d++;const i=document.querySelector('#prog i'),s=$('st');if(i)i.style.width=Math.max(3,d)+'%';if(s&&s.textContent.startsWith('جارٍ التحميل'))s.textContent='جارٍ التحميل '+d+'%'}},70);
+})();
+
+})(APP);
+(function(app){
+(function(){
+const st=document.createElement('style');
+st.textContent='.th{position:relative;overflow:hidden;width:130px}.qb{position:absolute;bottom:4px;right:4px;background:#000b;color:#fff;font-size:.7rem;padding:1px 8px;border-radius:99px;direction:ltr}';
+document.head.appendChild(st);
+let img=null;
+function cover(c,w,h){const r=Math.max(w/img.naturalWidth,h/img.naturalHeight),iw=img.naturalWidth*r,ih=img.naturalHeight*r;c.drawImage(img,(w-iw)/2,(h-ih)/2,iw,ih)}
+function drawCmp(){
+if(!img||!img.naturalWidth)return;
+const S=app.state(),orig=S.maxH||0,sel=S.mode=='v'?S.sel:null;
+const lo=$('lo'),hi=$('hi'),up=sel&&orig&&sel>orig;
+const tgt=sel?(up?orig:Math.min(sel,orig||sel)):(orig||img.naturalHeight);
+hi.width=1280;hi.height=720;cover(hi.getContext('2d'),1280,720);
+lo.width=Math.round(tgt*16/9);lo.height=tgt;cover(lo.getContext('2d'),lo.width,lo.height);
+lo.style.imageRendering=tgt>=480?'auto':'pixelated';
+const t=document.querySelectorAll('.tag');
+t[0].textContent=up?sel+'p بعد التكبير':tgt+'p المختارة';t[1].textContent=(orig||'؟')+'p الأصلية'}
+const o=call;
+call=async function(p,b){const r=await o(p,b);
+if(p=='/api/info'&&r){try{
+const m=(r.heights&&r.heights.length)?Math.max(...r.heights):0,th=$('th');
+th.innerHTML='';
+if(r.preview){const v=document.createElement('video');v.src=r.preview;v.muted=true;v.referrerPolicy='no-referrer';v.preload='auto';v.autoplay=true;v.loop=true;v.playsInline=true;v.style.cssText='width:100%;height:100%;object-fit:cover';v.onclick=()=>{v.muted=!v.muted};v.onerror=()=>v.remove();th.appendChild(v);v.play().catch(()=>{})}
+const qb=document.createElement('span');qb.className='qb';qb.textContent=m?'الأصلية '+m+'p':'';th.appendChild(qb);
+img=new Image();img.onload=drawCmp;img.src=r.thumbnail||'';
+document.querySelector('.cmp h2').textContent='الفرق بين الأصلية والمختارة';
+document.querySelector('.cmp p').textContent='حرّك الفاصل لمقارنة الجودة الأصلية بالجودة المختارة.'}catch(e){}}
+return r};
+const orr=render;render=function(){orr();try{drawCmp()}catch(e){}};
+})();
+
+})(APP);
+(function(app){
+(function(){
+const od=document.getElementById('dlsh');if(od)od.remove();
+document.querySelectorAll('.gear').forEach(b=>{if(b.textContent=='📥')b.remove()});
+let L=[],T='v';try{L=JSON.parse(localStorage.getItem('dl2'))||[]}catch(e){}
+L.forEach(x=>{if(x.s=='downloading')x.s='interrupted'});
+const save=()=>{try{localStorage.setItem('dl2',JSON.stringify(L.slice(0,200)))}catch(e){}};
+const sh=document.createElement('div');sh.className='sheet';sh.hidden=true;
+sh.innerHTML='<div class="card"><button class="x">✕</button><h2>التنزيلات</h2><div class="seg"><button data-k="v">فيديو</button><button data-k="a">صوت</button></div><p class="st"></p><div class="dl"></div></div>';
+document.body.appendChild(sh);
+const q=s=>sh.querySelector(s);
+const msg=t=>{q('p.st').textContent=t};
+async function play(x){
+const Yt=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Yt;
+if(!x.uri){msg('هذا التنزيل ما يقبل التشغيل من هنا، افتحه من معرض الجوال أو مدير الملفات');return}
+try{await Yt.openFile({uri:x.uri,mime:x.mime||'*/*'})}catch(e){msg(e.message&&e.message.indexOf('implemented')<0?e.message:'حدّث التطبيق لتفعيل التشغيل')}}
+function draw(){
+if(sh.hidden)return;
+sh.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.k==T));
+const c=q('.dl'),items=L.filter(x=>x.k==T);
+c.innerHTML=items.length?'':'<p class="st">لا توجد تنزيلات في هذا القسم</p>';
+items.forEach(x=>{
+const d=document.createElement('div');d.style.cssText='border-top:1px solid var(--line);padding:10px 0;cursor:pointer;display:flex;gap:10px;align-items:center';
+d.innerHTML='<img style="width:84px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:var(--s2)"><div style="flex:1;min-width:0"><b></b><div class="st"></div><div class="st"></div><div class="fmt"></div></div>';
+const im=d.firstChild,bx=d.lastChild;
+if(x.th){im.referrerPolicy='no-referrer';im.onerror=()=>{im.style.visibility='hidden'};im.src=x.th}else im.style.visibility='hidden';
+const tx={downloading:'جارٍ التحميل '+x.p+'%',done:'اضغط للتشغيل',error:'فشل: '+(x.e||''),interrupted:'توقّف'}[x.s]||'';
+bx.children[0].textContent=(x.s=='done'?'▶ ':'')+x.title;
+bx.children[1].textContent=x.q+' · '+new Date(x.t).toLocaleString('ar');
+bx.children[2].textContent=tx;
+const del=document.createElement('button');del.textContent='حذف من السجل';
+del.onclick=e=>{e.stopPropagation();L=L.filter(y=>y!==x);save();draw()};
+bx.children[3].appendChild(del);
+d.onclick=()=>{if(x.s=='done')play(x)};
+c.appendChild(d)})}
+sh.querySelectorAll('.seg button').forEach(b=>{b.onclick=()=>{T=b.dataset.k;msg('');draw()}});
+q('.x').onclick=()=>{sh.hidden=true};
+const btn=document.createElement('button');btn.className='gear';btn.textContent='📥';btn.setAttribute('aria-label','التنزيلات');
+btn.onclick=()=>{sh.hidden=false;msg('');draw()};
+const g=document.querySelector('.gear');let w=g.parentNode;
+if(w.classList.contains('top')){const n=document.createElement('div');n.style.cssText='display:flex;gap:8px';w.insertBefore(n,g);n.appendChild(g);w=n}
+w.insertBefore(btn,g);
+let LT='';const o=call;
+call=async function(p,b){
+const r=await o(p,b);
+try{
+if(p=='/api/info'&&r)LT=r.thumbnail||'';
+if(p=='/api/start'&&r&&r.id){
+const S=app.state();
+L.unshift({th:LT,id:r.id,url:S.curUrl,title:$('mt').textContent||S.curUrl,t:Date.now(),s:'downloading',p:0,k:S.mode=='v'?'v':'a',
+q:S.mode=='v'?(S.sel==2160?'4K':S.sel+'p')+' · '+fm:A[S.sel][0]+' '+A[S.sel][1]});
+save();draw()
+}else if(p.startsWith('/api/status/')&&r){
+const x=L.find(y=>y.id==p.split('/').pop());
+if(x){x.p=r.p||0;
+if(r.s=='done'){x.s='done';x.p=100;x.uri=r.uri;x.mime=r.mime}else if(r.s=='error'){x.s='error';x.e=r.err||''}else x.s='downloading';
+save();draw()}}
+}catch(e){}
+return r};
+})();
+
+})(APP);
 render();runMods();setInterval(pollShare,1000);pollShare();
 </script>
 </body>
