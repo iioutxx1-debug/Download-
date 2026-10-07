@@ -114,6 +114,18 @@ public class YtPlugin extends Plugin {
                 res.put("thumbnail", d.optString("thumbnail", ""));
                 res.put("site", d.optString("extractor_key", ""));
                 res.put("heights", arr);
+                String pv = "";
+                int bh = -1;
+                if (fm != null) for (int i = 0; i < fm.length(); i++) {
+                    JSONObject f = fm.getJSONObject(i);
+                    String u = f.optString("url", ""), pr = f.optString("protocol", "");
+                    int h = f.optInt("height", 0);
+                    if (!u.isEmpty() && (pr.equals("https") || pr.equals("http"))
+                            && !"none".equals(f.optString("vcodec", "none")) && !"none".equals(f.optString("acodec", "none"))
+                            && h <= 480 && h > bh) { bh = h; pv = u; }
+                }
+                if (pv.isEmpty() && d.optString("protocol", "").startsWith("http") && !d.optString("protocol", "").contains("m3u8")) pv = d.optString("url", "");
+                res.put("preview", pv);
                 call.resolve(res);
                 return;
             } catch (Exception e) { last = e; }
