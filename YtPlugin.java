@@ -175,7 +175,7 @@ public class YtPlugin extends Plugin {
                             r.addOption("--postprocessor-args", "VideoConvertor:-vf scale=-2:" + upH + ":flags=lanczos,unsharp=5:5:0.7");
                         }
                     }
-                    exec(r, st, "audio".equals(kind));
+                    exec(r, st, "audio".equals(kind), id);
                     last = null;
                     break;
                 } catch (Exception e) {
@@ -195,16 +195,19 @@ public class YtPlugin extends Plugin {
             st.put("saved", save(best));
             st.put("p", 100);
             st.put("s", "done");
+            notif(id.hashCode(), "اكتمل التحميل", 100, false);
         } catch (Exception e) {
             st.put("err", shorten(e));
             st.put("s", "error");
+            notif(id.hashCode(), "فشل التحميل", 0, false);
         }
     }
 
-    private void exec(YoutubeDLRequest r, JSObject st, boolean audio) throws Exception {
+    private void exec(YoutubeDLRequest r, JSObject st, boolean audio, String jid) throws Exception {
         final int total = audio ? 1 : 2;
         final int[] stream = {0};
         final float[] prev = {0};
+        final int[] lastN = {-1};
         java.lang.reflect.InvocationHandler hd = (proxy, m, a) -> {
             if (m.getDeclaringClass() == Object.class)
                 return m.getName().equals("equals") ? Boolean.FALSE : m.getName().equals("hashCode") ? (Object) Integer.valueOf(0) : "cb";
@@ -212,7 +215,9 @@ public class YtPlugin extends Plugin {
                 float p = ((Number) a[0]).floatValue();
                 if (p < prev[0] - 20 && stream[0] < total - 1) stream[0]++;
                 prev[0] = p;
-                st.put("p", (int) Math.min(95, (stream[0] * 100 + Math.max(0, p)) / total));
+                int pct = (int) Math.min(95, (stream[0] * 100 + Math.max(0, p)) / total);
+                st.put("p", pct);
+                if (pct != lastN[0]) { lastN[0] = pct; notif(jid.hashCode(), "جارٍ التحميل", pct, true); }
             }
             return m.getReturnType() == void.class ? null : Class.forName("kotlin.Unit").getField("INSTANCE").get(null);
         };
@@ -231,6 +236,24 @@ public class YtPlugin extends Plugin {
             throw (c instanceof Exception) ? (Exception) c : e;
         }
         y.execute(r, null, null);
+    }
+
+    private void notif(int nid, String title, int p, boolean ongoing) {
+        try {
+            android.content.Context c = getContext();
+            android.app.NotificationManager nm = (android.app.NotificationManager) c.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
+            android.app.Notification.Builder b;
+            if (Build.VERSION.SDK_INT >= 26) {
+                nm.createNotificationChannel(new android.app.NotificationChannel("dl", "التحميلات", android.app.NotificationManager.IMPORTANCE_LOW));
+                b = new android.app.Notification.Builder(c, "dl");
+            } else {
+                b = new android.app.Notification.Builder(c);
+            }
+            b.setSmallIcon(ongoing ? android.R.drawable.stat_sys_download : android.R.drawable.stat_sys_download_done)
+                    .setContentTitle(title).setOnlyAlertOnce(true).setOngoing(ongoing);
+            if (ongoing) b.setProgress(100, p, false).setContentText(p + "%");
+            nm.notify(nid, b.build());
+        } catch (Exception e) { }
     }
 
     private String save(File f) throws Exception {

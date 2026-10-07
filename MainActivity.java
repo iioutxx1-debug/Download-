@@ -12,6 +12,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(YtPlugin.class);
         super.onCreate(savedInstanceState);
         grab(getIntent());
+        if (android.os.Build.VERSION.SDK_INT >= 33) requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1);
     }
 
     @Override
