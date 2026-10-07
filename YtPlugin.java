@@ -66,38 +66,51 @@ public class YtPlugin extends Plugin {
         }
     }
 
+    private YoutubeDLRequest mk(String url, JSArray x, String ck, int s) throws Exception {
+        YoutubeDLRequest r = new YoutubeDLRequest(url);
+        r.addOption("--no-playlist");
+        if (x != null) for (int i = 0; i < x.length(); i++) r.addOption(x.getString(i));
+        if (ck != null && !ck.isEmpty()) {
+            File f = new File(getContext().getCacheDir(), "ck.txt");
+            try (java.io.FileWriter w = new java.io.FileWriter(f)) { w.write(ck); }
+            r.addOption("--cookies", f.getAbsolutePath());
+        }
+        if (s == 1) { r.addOption("--extractor-args"); r.addOption("youtube:player_client=android,ios"); }
+        if (s == 2) { r.addOption("--force-ipv4"); r.addOption("--extractor-args"); r.addOption("youtube:player_client=tv,web_safari"); }
+        return r;
+    }
+
     @PluginMethod
     public void info(PluginCall call) {
         String url = call.getString("url");
         if (url == null || url.isEmpty()) { call.reject("لا يوجد رابط"); return; }
-        try {
-            init();
-            YoutubeDLRequest r = new YoutubeDLRequest(url);
-            r.addOption("--dump-single-json");
-            r.addOption("--no-playlist");
-            String out = YoutubeDL.getInstance().execute(r, null, null).getOut();
-            JSONObject d = new JSONObject(out);
-            TreeSet<Integer> hs = new TreeSet<>();
-            JSONArray fm = d.optJSONArray("formats");
-            if (fm != null) {
-                for (int i = 0; i < fm.length(); i++) {
+        Exception last = null;
+        try { init(); } catch (Exception e) { call.reject("تعذر تجهيز المحرك: " + shorten(e)); return; }
+        for (int s = 0; s < 3; s++) {
+            try {
+                YoutubeDLRequest r = mk(url, call.getArray("opts"), call.getString("cookies"), s);
+                r.addOption("--dump-single-json");
+                JSONObject d = new JSONObject(YoutubeDL.getInstance().execute(r, null, null).getOut());
+                TreeSet<Integer> hs = new TreeSet<>();
+                JSONArray fm = d.optJSONArray("formats");
+                if (fm != null) for (int i = 0; i < fm.length(); i++) {
                     JSONObject f = fm.getJSONObject(i);
                     int h = f.optInt("height", 0);
                     if (h > 0 && !"none".equals(f.optString("vcodec", ""))) hs.add(h);
                 }
-            }
-            JSArray arr = new JSArray();
-            for (int h : hs) arr.put(h);
-            JSObject res = new JSObject();
-            res.put("title", d.optString("title", ""));
-            res.put("duration", d.optDouble("duration", 0));
-            res.put("thumbnail", d.optString("thumbnail", ""));
-            res.put("site", d.optString("extractor_key", ""));
-            res.put("heights", arr);
-            call.resolve(res);
-        } catch (Exception e) {
-            call.reject("تعذر تحليل الرابط: " + shorten(e));
+                JSArray arr = new JSArray();
+                for (int h : hs) arr.put(h);
+                JSObject res = new JSObject();
+                res.put("title", d.optString("title", ""));
+                res.put("duration", d.optDouble("duration", 0));
+                res.put("thumbnail", d.optString("thumbnail", ""));
+                res.put("site", d.optString("extractor_key", ""));
+                res.put("heights", arr);
+                call.resolve(res);
+                return;
+            } catch (Exception e) { last = e; }
         }
+        call.reject("تعذر تحليل الرابط: " + shorten(last));
     }
 
     @PluginMethod
@@ -107,13 +120,16 @@ public class YtPlugin extends Plugin {
         final String fmt = call.getString("fmt", "mp4");
         final int height = call.getInt("height", 720);
         final int abr = call.getInt("abr", 192);
+        final int up = call.getInt("up", 0);
+        final JSArray x = call.getArray("opts");
+        final String ck = call.getString("cookies");
         if (url == null || url.isEmpty()) { call.reject("لا يوجد رابط"); return; }
         final String id = UUID.randomUUID().toString().substring(0, 12);
         JSObject st = new JSObject();
         st.put("s", "queued");
         st.put("p", 0);
         jobs.put(id, st);
-        new Thread(() -> run(id, url, kind, fmt, height, abr)).start();
+        new Thread(() -> run(id, url, kind, fmt, height, abr, up, x, ck)).start();
         JSObject res = new JSObject();
         res.put("id", id);
         call.resolve(res);
@@ -126,32 +142,45 @@ public class YtPlugin extends Plugin {
         call.resolve(st);
     }
 
-    private void run(String id, String url, String kind, String fmt, int height, int abr) {
+    private void run(String id, String url, String kind, String fmt, int height, int abr, int upH, JSArray x, String ck) {
         JSObject st = jobs.get(id);
         try {
             init();
             st.put("s", "downloading");
             File dir = new File(getContext().getCacheDir(), "dl/" + id);
             dir.mkdirs();
-            YoutubeDLRequest r = new YoutubeDLRequest(url);
-            r.addOption("--no-playlist");
-            r.addOption("-o", dir.getAbsolutePath() + "/%(title).80s.%(ext)s");
-            if ("audio".equals(kind)) {
-                r.addOption("-x");
-                r.addOption("--audio-format", fmt);
-                r.addOption("--audio-quality", abr + "K");
-            } else {
-                r.addOption("-f", "bestvideo[height<=" + height + "]+bestaudio/best[height<=" + height + "]/best");
-                r.addOption("--merge-output-format", fmt);
+            boolean up = upH > 0 && !"audio".equals(kind);
+            Exception last = null;
+            for (int s = 0; s < 3; s++) {
+                try {
+                    YoutubeDLRequest r = mk(url, x, ck, s);
+                    r.addOption("-o", dir.getAbsolutePath() + "/%(title).80s.%(ext)s");
+                    if ("audio".equals(kind)) {
+                        r.addOption("-x");
+                        r.addOption("--audio-format", fmt);
+                        r.addOption("--audio-quality", abr + "K");
+                    } else {
+                        r.addOption("-f", "bestvideo[height<=" + height + "]+bestaudio/best[height<=" + height + "]/best");
+                        r.addOption("--merge-output-format", fmt);
+                        if (up) {
+                            r.addOption("--recode-video", "mp4");
+                            r.addOption("--postprocessor-args", "VideoConvertor:-vf scale=-2:" + upH + ":flags=lanczos,unsharp=5:5:0.7");
+                        }
+                    }
+                    YoutubeDL.getInstance().execute(r, null, null);
+                    last = null;
+                    break;
+                } catch (Exception e) {
+                    last = e;
+                    if (up) { up = false; st.put("note", "تعذر التكبير فحُمّل بالجودة الأصلية"); s--; }
+                }
             }
-            YoutubeDL.getInstance().execute(r, null, null);
+            if (last != null) throw last;
             File best = null;
             File[] fs = dir.listFiles();
-            if (fs != null) {
-                for (File f : fs) {
-                    if (f.getName().endsWith(".part")) continue;
-                    if (best == null || f.lastModified() > best.lastModified()) best = f;
-                }
+            if (fs != null) for (File f : fs) {
+                if (f.getName().endsWith(".part")) continue;
+                if (best == null || f.lastModified() > best.lastModified()) best = f;
             }
             if (best == null) throw new Exception("لم يتم إنشاء ملف");
             st.put("s", "saving");
