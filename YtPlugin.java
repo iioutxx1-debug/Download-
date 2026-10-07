@@ -66,6 +66,14 @@ public class YtPlugin extends Plugin {
         }
     }
 
+    @PluginMethod
+    public void getShared(PluginCall call) {
+        JSObject r = new JSObject();
+        r.put("text", MainActivity.pending == null ? "" : MainActivity.pending);
+        MainActivity.pending = null;
+        call.resolve(r);
+    }
+
     private YoutubeDLRequest mk(String url, JSArray x, String ck, int s) throws Exception {
         YoutubeDLRequest r = new YoutubeDLRequest(url);
         r.addOption("--no-playlist");
@@ -167,7 +175,7 @@ public class YtPlugin extends Plugin {
                             r.addOption("--postprocessor-args", "VideoConvertor:-vf scale=-2:" + upH + ":flags=lanczos,unsharp=5:5:0.7");
                         }
                     }
-                    YoutubeDL.getInstance().execute(r, null, null);
+                    exec(r, st, "audio".equals(kind));
                     last = null;
                     break;
                 } catch (Exception e) {
@@ -191,6 +199,38 @@ public class YtPlugin extends Plugin {
             st.put("err", shorten(e));
             st.put("s", "error");
         }
+    }
+
+    private void exec(YoutubeDLRequest r, JSObject st, boolean audio) throws Exception {
+        final int total = audio ? 1 : 2;
+        final int[] stream = {0};
+        final float[] prev = {0};
+        java.lang.reflect.InvocationHandler hd = (proxy, m, a) -> {
+            if (m.getDeclaringClass() == Object.class)
+                return m.getName().equals("equals") ? Boolean.FALSE : m.getName().equals("hashCode") ? (Object) Integer.valueOf(0) : "cb";
+            if (a != null && a.length == 3 && a[0] instanceof Number) {
+                float p = ((Number) a[0]).floatValue();
+                if (p < prev[0] - 20 && stream[0] < total - 1) stream[0]++;
+                prev[0] = p;
+                st.put("p", (int) Math.min(95, (stream[0] * 100 + Math.max(0, p)) / total));
+            }
+            return m.getReturnType() == void.class ? null : Class.forName("kotlin.Unit").getField("INSTANCE").get(null);
+        };
+        YoutubeDL y = YoutubeDL.getInstance();
+        try {
+            for (java.lang.reflect.Method m : y.getClass().getMethods()) {
+                if (!m.getName().equals("execute")) continue;
+                Class<?>[] pt = m.getParameterTypes();
+                if (pt.length != 3 || pt[0] != YoutubeDLRequest.class || !pt[2].isInterface()) continue;
+                Object cb = java.lang.reflect.Proxy.newProxyInstance(pt[2].getClassLoader(), new Class<?>[]{pt[2]}, hd);
+                m.invoke(y, r, null, cb);
+                return;
+            }
+        } catch (java.lang.reflect.InvocationTargetException e) {
+            Throwable c = e.getCause();
+            throw (c instanceof Exception) ? (Exception) c : e;
+        }
+        y.execute(r, null, null);
     }
 
     private String save(File f) throws Exception {

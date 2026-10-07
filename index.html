@@ -97,7 +97,7 @@ button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 <h2>الإعدادات</h2>
 <h3>لمحة</h3><p>المطور: علي خالد<br><a href="tel:07875258038">07875258038</a><br><a href="https://instagram.com/sucn_i">instagram: sucn_i</a></p>
 <h3>المظهر</h3><div class="fmt"><button onclick="th('auto')">تلقائي</button><button onclick="th('light')">نهاري</button><button onclick="th('dark')">ليلي</button></div>
-<h3>الإصلاح</h3><textarea id="fxt" rows="5" placeholder="الصق كود الإصلاح هنا"></textarea>
+<h3>الإصلاح والإضافات</h3><p class="st">الصق فقط كوداً أرسلته لك أو تثق به، فالإضافة تعمل بصلاحيات التطبيق كاملة.</p><textarea id="fxt" rows="5" placeholder="الصق كود الإصلاح أو الإضافة هنا"></textarea>
 <div class="fmt"><button onclick="applyFx()">تطبيق</button><button onclick="clrFx()">مسح</button><button onclick="copyRep()">نسخ تقرير المشكلة</button></div><p id="fxm" class="st"></p>
 </div></div>
 <script>
@@ -132,16 +132,27 @@ if(d.thumbnail){$('th').style.backgroundImage='url("'+d.thumbnail+'")';$('th').s
 $('res').classList.add('on');tab('v');$('res').scrollIntoView({behavior:'smooth'})}catch(e){$('err').textContent=e.message;rep(u,e.message)}$('an').textContent='حلّل الرابط'};
 $('start').onclick=async()=>{if(sel===null)return;const p=$('prog'),bar=p.firstChild;p.style.display='block';bar.style.width='3%';$('st').textContent='جارٍ البدء…';
 const b=mode=='v'?{url:curUrl,kind:'video',height:Math.min(sel,maxH||sel),fmt:fm.toLowerCase()}:{url:curUrl,kind:'audio',fmt:A[sel][0].toLowerCase(),abr:parseInt(A[sel][1])||192};
-try{const {id}=await call('/api/start',Object.assign(b,fx(curUrl),{up:(mode=='v'&&maxH&&sel>maxH)?Math.min(sel,1080):0}));for(;;){await new Promise(r=>setTimeout(r,1200));const s=await call('/api/status/'+id);bar.style.width=Math.max(3,s.p)+'%';if(s.s=='error')throw new Error(s.err||'فشل التحميل');if(s.s=='done'){bar.style.width='100%';if(s.saved){$('st').textContent='تم الحفظ في التنزيلات ‹ Safaa: '+s.saved+(s.note?' ('+s.note+')':'')}else{$('st').textContent='اكتمل. يبدأ حفظ الملف…';location.href=API+'/api/file/'+id}return}$('st').textContent=s.s=='saving'?'جارٍ الحفظ…':'جارٍ التحميل… قد يستغرق دقائق'}}catch(e){$('st').textContent=e.message;rep(curUrl,e.message)}};
+try{const {id}=await call('/api/start',Object.assign(b,fx(curUrl),{up:(mode=='v'&&maxH&&sel>maxH)?Math.min(sel,1080):0}));for(;;){await new Promise(r=>setTimeout(r,600));const s=await call('/api/status/'+id);bar.style.width=Math.max(3,s.p)+'%';if(s.s=='error')throw new Error(s.err||'فشل التحميل');if(s.s=='done'){bar.style.width='100%';if(s.saved){$('st').textContent='تم الحفظ في التنزيلات ‹ Safaa: '+s.saved+(s.note?' ('+s.note+')':'')}else{$('st').textContent='اكتمل. يبدأ حفظ الملف…';location.href=API+'/api/file/'+id}return}$('st').textContent=s.s=='saving'?'جارٍ الحفظ…':'جارٍ التحميل '+s.p+'%'}}catch(e){$('st').textContent=e.message;rep(curUrl,e.message)}};
 let FX={rules:[]};try{FX=JSON.parse(localStorage.getItem('fx'))||FX}catch(e){}
 const fx=u=>{const o={opts:[],cookies:''};for(const r of FX.rules||[])if(u.includes(r.match)){o.opts=o.opts.concat(r.opts||[]);if(r.cookies)o.cookies=r.cookies}return o};
 const rep=(u,m)=>{try{localStorage.setItem('rep',JSON.stringify({url:u,err:m,t:new Date().toISOString(),fx:FX}))}catch(e){}};
 const th=m=>{if(m=='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',m);try{localStorage.setItem('th',m)}catch(e){}};
 try{th(localStorage.getItem('th')||'auto')}catch(e){}
-function applyFx(){try{const j=JSON.parse($('fxt').value);if(!Array.isArray(j.rules))throw 0;FX=j;localStorage.setItem('fx',JSON.stringify(j));$('fxm').textContent='تم تطبيق الإصلاح ('+j.rules.length+' قاعدة)'}catch(e){$('fxm').textContent='الكود غير صالح، انسخه كاملاً كما أرسلته لك'}}
-function clrFx(){FX={rules:[]};try{localStorage.removeItem('fx')}catch(e){}$('fxt').value='';$('fxm').textContent='تم مسح الإصلاحات'}
+function applyFx(){const t=$('fxt').value.trim();if(!t)return;
+try{const j=JSON.parse(t);if(!Array.isArray(j.rules))throw 0;FX=j;localStorage.setItem('fx',JSON.stringify(j));$('fxm').textContent='تم تطبيق الإصلاح ('+j.rules.length+' قاعدة)';return}catch(e){}
+try{new Function('app',t)}catch(e){$('fxm').textContent='الكود غير صالح: '+e.message;return}
+try{const m=JSON.parse(localStorage.getItem('mods')||'[]');m.push(t);localStorage.setItem('mods',JSON.stringify(m))}catch(e){}
+try{new Function('app',t)(APP);$('fxm').textContent='أُضيفت الإضافة وفُعّلت';$('fxt').value=''}catch(e){$('fxm').textContent='خطأ في الإضافة: '+e.message}}
+function clrFx(){FX={rules:[]};try{localStorage.removeItem('fx');localStorage.removeItem('mods')}catch(e){}$('fxt').value='';$('fxm').textContent='تم مسح الإصلاحات والإضافات'}
 function copyRep(){const t=localStorage.getItem('rep')||'لا يوجد خطأ مسجل';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>$('fxm').textContent='تم النسخ، أرسله لي').catch(()=>{$('fxt').value=t;$('fxm').textContent='انسخ النص من الخانة أعلاه'})}
-render();
+const APP={$,call,th,render,tab,fx:()=>FX,state:()=>({mode,sel,maxH,curUrl})};
+function runMods(){let m=[];try{m=JSON.parse(localStorage.getItem('mods'))||[]}catch(e){}
+if(localStorage.getItem('boot')=='1'){localStorage.removeItem('boot');if(m.length){localStorage.removeItem('mods');$('fxm').textContent='تعطل التطبيق بعد آخر إضافة، فحُذفت الإضافات'}return}
+localStorage.setItem('boot','1');
+for(const c of m){try{new Function('app',c)(APP)}catch(e){$('fxm').textContent='خطأ في إضافة: '+e.message}}
+setTimeout(()=>localStorage.removeItem('boot'),1500)}
+async function pollShare(){const Yt=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Yt;if(!Yt)return;try{const r=await Yt.getShared();const m=(r.text||'').match(/https?:\/\/\S+/);if(m){$('url').value=m[0];$('sh').hidden=true;$('an').click()}}catch(e){}}
+render();runMods();setInterval(pollShare,1000);pollShare();
 </script>
 </body>
 </html>
